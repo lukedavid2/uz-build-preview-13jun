@@ -1,0 +1,420 @@
+/* proto.css — app shell for the interactive prototype. Reuses uz.css tokens &
+   component classes (.chip, .barcell, .lanes, .seltools, .modeswitch, …) and
+   adds only shell layout, the tab stave, per-line playhead, and transitions. */
+
+body { margin: 0; background: linear-gradient(180deg, var(--cream-1), var(--cream-2)); font-family: 'Outfit', sans-serif; color: var(--ink); }
+body.dark-mode { background: linear-gradient(180deg, #1d2027, #16181f); color: #e6e2d8; }
+
+.appwrap { max-width: 1180px; margin: 0 auto; padding: 22px 24px 60px; }
+.apphead { display: flex; align-items: center; gap: 12px; margin: 0 0 16px; }
+.apptitle { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; }
+.apptitle em { color: var(--gold); font-style: normal; }
+.apptitle .badge { font-family: 'Outfit'; font-size: 9px; font-weight: 700; letter-spacing: 0.12em; color: #fff; background: #2b2b2b; border-radius: 10px; padding: 3px 8px; vertical-align: 3px; margin-left: 4px; }
+.backlink { margin-left: auto; font-size: 12.5px; font-weight: 600; color: var(--gold-deep); text-decoration: none; }
+.backlink:hover { text-decoration: underline; }
+
+.transport-card { margin: 0 0 16px; }
+.t-keysel { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--muted); font-weight: 600; }
+.t-keysel select { font-family: 'Outfit'; font-size: 12.5px; font-weight: 700; color: var(--ink); border: 1px solid #e6dec9; background: #fffdf6; border-radius: 8px; padding: 5px 8px; }
+.t-chip.mini { padding: 6px 10px; cursor: pointer; user-select: none; }
+.t-chip.mini.on { background: #2b2b2b; color: #fff; border-color: #2b2b2b; }
+.bpm-range { -webkit-appearance: none; appearance: none; width: 110px; height: 4px; border-radius: 2px; background: #d8cdb1; outline: none; }
+.bpm-range::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--gold); cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+.bpm-range::-moz-range-thumb { width: 14px; height: 14px; border: none; border-radius: 50%; background: var(--gold); cursor: pointer; }
+.sharebar { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.sharetoken { flex: 1; font-family: ui-monospace, Menlo, monospace; font-size: 11.5px; color: #877f6f; background: #fbf7ec; border: 1px solid #efe7d4; border-radius: 8px; padding: 7px 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dark-mode .sharetoken { background: #20232c; border-color: #343845; color: #9aa0ad; }
+
+.transport-card, .palette, .linecard { transition: background .2s; }
+.dark-mode .uzcard { background: #20232c; border-color: #343845; box-shadow: none; }
+.dark-mode .uzlabel { color: #8d93a2; }
+
+/* ---- lines ---- */
+.lines { display: flex; flex-direction: column; gap: 14px; margin: 0 0 16px; }
+.linecard { background: var(--card); border: 1px solid #eee6d6; border-radius: 12px; box-shadow: 0 1px 3px rgba(90,75,40,0.06); padding: 12px 16px 14px; }
+.dark-mode .linecard { background: #20232c; border-color: #343845; box-shadow: none; }
+.linecard.current { box-shadow: 0 0 0 2px var(--gold), 0 1px 3px rgba(90,75,40,0.06); }
+.linebody { margin-top: 2px; }
+.lineheader { padding: 2px 0 10px; flex-wrap: wrap; gap: 8px; }
+.lh-btn { white-space: nowrap; }
+.modeswitch span, .lh-seg span { white-space: nowrap; }
+.dark-mode .lineheader, .dark-mode .lh-name { color: #e6e2d8; }
+.addline { align-self: flex-start; font-size: 12.5px; font-weight: 600; color: var(--gold-deep); border: 1px dashed #e0d4b2; border-radius: 14px; padding: 8px 16px; cursor: pointer; background: #fffdf6; }
+.dark-mode .addline { background: #232732; border-color: #3c4150; }
+
+/* chip interactions */
+.chip { cursor: pointer; transition: box-shadow .15s, transform .1s; }
+.chip.anatomy3 { gap: 8px; }
+/* variant-3 = diagram-first: diagram leads inline-left (override uz.css absolute) */
+.chip.anatomy3 .chord-shape-btn { position: static; bottom: auto; right: auto; flex: none; }
+.chip.anatomy3 .minidiag { width: 26px; height: 33px; }
+.chip.anatomy3 .durbadge { left: auto; right: 6px; }
+.chip.short .durbadge { right: auto; left: 6px; }
+.chip.short .shapedot { top: 4px; bottom: auto; right: 5px; }
+.chip:hover:not(.sel) { box-shadow: 0 2px 8px rgba(80,65,30,0.14); }
+.chip .durbadge { cursor: pointer; }
+.chip .handle { cursor: ew-resize; touch-action: none; }
+.chip.tie { display: flex; align-items: center; justify-content: center; background: repeating-linear-gradient(90deg, rgba(200,160,74,0.05) 0 6px, transparent 6px 12px); border-style: dashed; cursor: default; }
+.chip.tie .tiemark { font-size: 11px; font-weight: 600; color: var(--muted); }
+
+/* timeline strip */
+.tl-strip { flex: 1 1 0%; min-width: 0; height: 60px; border-radius: 0; background: transparent; border: none; background-image: none; }
+.tl-strip .chipslot { padding: 0 2px; min-width: 0; }
+
+/* ---- unified lane panel + continuous bar gridlines ---- */
+.tl-inner { background: #fffdf8; border: 1px solid var(--line); border-radius: 8px; position: relative; overflow: hidden; }
+.dark-mode .tl-inner { background: #1f222b; border-color: #343845; }
+.tl-inner .lanerow { position: relative; z-index: 1; }
+.tl-grid { position: absolute; left: 58px; right: 0; top: 0; bottom: 0; z-index: 0; pointer-events: none; }
+.tl-grid span { position: absolute; top: 0; bottom: 0; width: 1px; }
+.tl-grid span.beat { background: #efe8d6; }
+.tl-grid span.bar { background: #cdc2a6; width: 1.5px; }
+.dark-mode .tl-grid span.beat { background: #23262f; }
+.dark-mode .tl-grid span.bar { background: #3a3f4c; }
+.tl-inner .bigruler { border-bottom: 1px solid #d4cbb2; }
+.tl-inner .melband { background: transparent; border: none; }
+.tl-inner .melgutter { background: transparent; }
+
+/* ---- empty / blank bars ---- */
+.chip.blank { background: transparent; border: 1.5px dashed #ddd3bd; box-shadow: none; flex-direction: column; gap: 1px; color: #b3a98a; }
+.chip.blank:hover { border-color: var(--gold); background: rgba(200,160,74,0.04); }
+.chip.blank.sel { border-style: solid; border-color: var(--gold); box-shadow: 0 0 0 2px rgba(200,160,74,0.45); }
+.chip.blank .blankplus { font-size: 17px; font-weight: 400; line-height: 1; color: #c5bca3; }
+.chip.blank .blanklbl { font-size: 9px; font-weight: 600; letter-spacing: 0.04em; }
+.dark-mode .chip.blank { border-color: #3c4150; color: #6d7484; }
+.barcell.addbar { cursor: pointer; }
+.chip.addbarbtn { background: transparent; border: 1.5px dashed #e0d4b2; box-shadow: none; color: var(--gold-deep); font-weight: 700; font-size: 12px; cursor: pointer; }
+.chip.addbarbtn:hover { background: rgba(200,160,74,0.06); border-color: var(--gold); }
+.chip.tie { background: repeating-linear-gradient(90deg, rgba(200,160,74,0.06) 0 7px, transparent 7px 14px); }
+.chip.tie .tiemark { font-size: 11px; font-weight: 600; color: var(--gold-deep); opacity: 0.8; }
+
+/* ---- timeline zoom + scroll ---- */
+.tl-zoombar { display: flex; align-items: center; gap: 8px; padding: 2px 0 8px; flex-wrap: nowrap; }
+.zoomhint { font-size: 11px; color: #b0a78d; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.addbar-btn { flex: none; }
+.zoombtn { width: 24px; height: 24px; border-radius: 7px; border: 1px solid #e6dec9; background: #fffdf6; color: var(--ink); font-weight: 700; font-size: 14px; line-height: 22px; text-align: center; cursor: pointer; user-select: none; }
+.zoombtn:hover { background: #faf3e2; }
+.zoomval { font: 700 11px/1 ui-monospace, Menlo, monospace; color: var(--muted); min-width: 38px; text-align: center; }
+.zoomhint { font-size: 11px; color: #b0a78d; }
+.addbar-btn { font-size: 11.5px; font-weight: 600; color: var(--gold-deep); border: 1px dashed #e0d4b2; border-radius: 13px; padding: 5px 12px; cursor: pointer; background: #fffdf6; }
+.addbar-btn:hover { background: rgba(200,160,74,0.06); border-color: var(--gold); }
+.dark-mode .zoombtn, .dark-mode .addbar-btn { background: #232732; border-color: #3c4150; color: #b8bdc9; }
+.tl-scroll { overflow-x: auto; overflow-y: hidden; padding-bottom: 3px; }
+.tl-scroll .lane-gutter, .tl-scroll .lane-label, .tl-scroll .melgutter { position: sticky; left: 0; z-index: 4; background: #fffdf8; }
+.dark-mode .tl-scroll .lane-gutter, .dark-mode .tl-scroll .lane-label { background: #1f222b; }
+.fillhint { font-size: 11px; font-style: italic; color: var(--gold-deep); margin-left: 8px; }
+
+/* tab-note editor + paste/loop chrome */
+.tabedit .fretval { font: 700 13px/1 ui-monospace, Menlo, monospace; color: var(--ink); min-width: 18px; text-align: center; }
+.dark-mode .tabedit .fretval { color: #e6e2d8; }
+.lh-btn.paste { color: var(--gold-deep); border-color: #e3d4ae; background: #fdf8ec; }
+.dark-mode .lh-btn.paste { background: #2a2a1f; border-color: #5a4f2f; color: #e0c878; }
+.t-chip.mini.loopbtn.on { background: var(--gold); color: #fff; border-color: var(--gold); }
+
+/* tab stave (6 strings) — roomier, sits in the unified panel */
+.tab6 { position: relative; flex: 1; height: 96px; background: transparent; border: none;
+  background-image: repeating-linear-gradient(180deg, #d8d0bc 0 1px, transparent 1px 13px);
+  background-position: 0 13px; background-repeat: repeat-x; }
+.dark-mode .tab6 { background-image: repeating-linear-gradient(180deg, #3c4150 0 1px, transparent 1px 13px); }
+.lanerow-tab { margin-bottom: 8px; }
+.lanerow-mel { margin-top: 4px; }
+.tab6 .tabdig { position: absolute; font: 600 12px/1 ui-monospace, Menlo, monospace; color: #5a5240; background: #fffdf8; padding: 1px 3px; transform: translate(-50%, -50%); border-radius: 4px; cursor: pointer; }
+.dark-mode .tab6 .tabdig { color: #cfc6ae; background: #1f222b; }
+.tab6 .tabdig.ghost { color: #b3a98a; font-style: italic; }
+.tab6 .tabdig:hover { box-shadow: 0 0 0 1.5px var(--gold); }
+.tab6 .tabdig.selnote { color: #fff; background: var(--gold); box-shadow: 0 0 0 2px rgba(200,160,74,0.45); }
+.tab6 .tabdig .artic { font-size: 9px; font-weight: 700; color: var(--gold-deep); margin-left: 1px; }
+.tab6 .tabdig.selnote .artic { color: #fff; }
+
+/* per-line playheads */
+.stacked-ph { position: absolute; width: 2px; background: var(--red); box-shadow: 0 0 6px rgba(192,57,43,0.45); z-index: 6; pointer-events: none; }
+.barcell.activebar { background: rgba(200,160,74,0.06); }
+.lane-tag { position: absolute; right: 8px; top: 6px; display: flex; gap: 6px; align-items: center; z-index: 6; }
+
+/* derive tag spacing inside lanes already styled in uz.css */
+.acceptbtn { cursor: pointer; }
+
+/* floating snap label during resize-drag */
+.snaplbl-float { position: fixed; z-index: 999; font: 700 11px/1 'Outfit'; color: #fff; background: var(--ann); border-radius: 8px; padding: 5px 9px; pointer-events: none; box-shadow: 0 2px 8px rgba(0,0,0,0.25); }
+
+/* hint + reset + toast */
+.hintbar { font-size: 12px; color: var(--muted); line-height: 1.5; padding: 4px 2px 0; }
+.hintbar b { color: var(--ink); } .dark-mode .hintbar b { color: #e6e2d8; }
+.resetlink { color: var(--gold-deep); font-weight: 600; cursor: pointer; margin-left: 6px; }
+.uz-toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%) translateY(12px); background: #2b2b2b; color: #fff; font-size: 13px; font-weight: 600; padding: 10px 18px; border-radius: 22px; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 1000; box-shadow: 0 6px 24px rgba(0,0,0,0.25); }
+.uz-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* selected editor row spacing */
+.seltools { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.dark-mode .seltools { border-color: #343845; }
+/* chord editor sits under the header → read it as an attached toolbar */
+.linecard > .seltools { margin: 4px 0 2px; padding: 9px 11px; border-top: none; border-radius: 9px;
+  background: rgba(200,160,74,0.06); border: 1px solid rgba(200,160,74,0.22); }
+.dark-mode .linecard > .seltools { background: rgba(200,160,74,0.10); border-color: rgba(200,160,74,0.28); }
+.dark-mode .st-btn { background: #232732; border-color: #3c4150; color: #b8bdc9; }
+.dark-mode .st-btn.on { background: var(--gold); border-color: var(--gold); color: #1d2027; }
+
+/* palette */
+.palette { margin-bottom: 14px; }
+
+/* per-line loop toggle + select mode */
+.lh-btn.loop.on { background: var(--gold); color: #fff; border-color: var(--gold); }
+.t-chip.mini.selbtn.on { background: var(--ann); color: #fff; border-color: var(--ann); }
+.select-mode .chip:not(.blank):not(.tie):not(.addbarbtn) { cursor: pointer; }
+.select-mode .chip:not(.blank):not(.tie):not(.addbarbtn)::after {
+  content: ''; position: absolute; top: 4px; left: 4px; width: 13px; height: 13px; border-radius: 4px;
+  border: 1.5px solid #c7bda3; background: #fff; z-index: 3; }
+.select-mode .chip.sel::after { content: '✓'; background: var(--gold); border-color: var(--gold); color: #fff;
+  font: 700 9px/12px 'Outfit', sans-serif; text-align: center; }
+.dark-mode.select-mode .chip::after { background: #2a2e38; border-color: #4a4e58; }
+
+/* ============================================================= v3 surfaces */
+/* ---- real chord-shape fingering grid on chips ---- */
+.shape-grid { position: relative; display: block; width: 34px; height: 42px; flex: none; }
+.sd-markers { position: absolute; left: 0; right: 0; top: 0; height: 9px; }
+.sd-mk { position: absolute; transform: translateX(-50%); font-size: 8px; line-height: 9px; color: #8a7f63; }
+.sd-fb { position: absolute; left: 0; right: 0; top: 10px; bottom: 0; border-top: 2px solid #6b5f44;
+  background-image: repeating-linear-gradient(180deg, transparent 0 7.6px, #cabf9f 7.6px 8.6px),
+    repeating-linear-gradient(90deg, transparent 0 5.6px, #cabf9f 5.6px 6.6px); }
+.sd-dot { position: absolute; width: 7px; height: 7px; border-radius: 50%; background: var(--ink); transform: translate(-50%, -50%); }
+.dark-mode .sd-fb { border-color: #cfc6ae; } .dark-mode .sd-dot { background: #e0c878; }
+.chord-shape-btn.add { opacity: 0.5; }
+.chord-shape-btn.add:hover { opacity: 1; }
+
+/* ---- compact per-lane toolbars (expand on hover/focus) ---- */
+.lane-toolbar { position: sticky; left: 0; z-index: 5; display: flex; align-items: center; gap: 4px; width: max-content;
+  padding: 5px 6px 5px 0; margin-top: 6px; opacity: 0.78; transition: opacity .15s; flex-wrap: wrap; }
+.lane-toolbar:hover, .lane-toolbar:focus-within { opacity: 1; }
+.lane-ico { width: 56px; flex: none; text-align: center; font-size: 13px; color: var(--gold-deep); }
+.mel-tb-btn { font: 600 10.5px/1 'Outfit', sans-serif; color: #6f685a; border: 1px solid #e8e1cf; background: #fffdf6;
+  border-radius: 11px; padding: 4px 8px; cursor: pointer; white-space: nowrap; }
+.mel-tb-btn:hover { background: #faf3e2; }
+.mel-tb-btn.on { background: #2b2b2b; color: #fff; border-color: #2b2b2b; }
+.dark-mode .mel-tb-btn { background: #232732; border-color: #3c4150; color: #b8bdc9; }
+.dark-mode .mel-tb-btn.on { background: var(--gold); border-color: var(--gold); color: #1d2027; }
+
+/* ---- melody scale-degree grid ---- */
+.mel-lane, .tab-lane { position: relative; z-index: 1; }
+.mel-gridwrap, .tab-gridwrap { display: flex; align-items: stretch; }
+.mel-gutter, .tab-gutter { width: 58px; flex: none; position: sticky; left: 0; z-index: 4; background: #fffdf8; }
+.dark-mode .mel-gutter, .dark-mode .tab-gutter { background: #1f222b; }
+.mel-rlabel { position: absolute; left: 0; right: 6px; display: flex; align-items: center; justify-content: flex-end; gap: 4px;
+  font: 600 9.5px/1 ui-monospace, Menlo, monospace; color: #a39a85; border-bottom: 1px solid #f1ebdb; }
+.mel-rlabel .rg-deg { font-weight: 700; color: #b8ad92; min-width: 8px; text-align: center; }
+.mel-rlabel .rg-nm { color: #7d7560; }
+.mel-rlabel.tonic { color: var(--gold-deep); font-weight: 700; }
+.mel-rlabel.tonic .rg-deg, .mel-rlabel.tonic .rg-nm { color: var(--gold-deep); }
+.dark-mode .mel-rlabel { color: #8d93a2; border-color: #262a34; } .dark-mode .mel-rlabel.tonic { color: #e0c878; }
+.dark-mode .mel-rlabel .rg-nm { color: #9aa0ad; }
+
+/* per-bar chord/scale tone reference pills */
+.mel-tones { display: flex; align-items: stretch; margin-top: 2px; }
+.mel-tone-gut { width: 58px; flex: none; position: sticky; left: 0; z-index: 4; background: #fffdf8; }
+.dark-mode .mel-tone-gut { background: #1f222b; }
+.mtone-bar { min-width: 0; border-left: 1px solid #e3dbc8; padding: 3px 6px; display: flex; align-items: center; gap: 3px; flex-wrap: wrap; overflow: hidden; }
+.dark-mode .mtone-bar { border-color: #2f3340; }
+.mtone-bar b { font: 700 10px/1 'Outfit', sans-serif; color: var(--gold-deep); margin-right: 3px; }
+.mtone-bar .tp { font: 700 9px/1 ui-monospace, Menlo, monospace; border-radius: 5px; padding: 2px 4px; }
+.mtone-bar .tp.ct { background: rgba(111,207,134,0.28); color: #2f6f43; }
+.mtone-bar .tp.sc { background: rgba(232,184,74,0.22); color: #8a6a16; }
+.dark-mode .mtone-bar .tp.ct { background: rgba(111,207,134,0.22); color: #8fdba2; }
+.dark-mode .mtone-bar .tp.sc { background: rgba(232,184,74,0.18); color: #e8c873; }
+.mel-grid { position: relative; flex: 1; min-width: 0; cursor: crosshair; touch-action: none;
+  background-image: linear-gradient(90deg, #eee7d6 1px, transparent 1px), linear-gradient(180deg, #f1ebdb 1px, transparent 1px); }
+.dark-mode .mel-grid { background-image: linear-gradient(90deg, #262a34 1px, transparent 1px), linear-gradient(180deg, #21242d 1px, transparent 1px); }
+.mel-tints { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.mel-tint { position: absolute; }
+.mel-tint.ct { background: rgba(94, 200, 120, 0.13); }
+.mel-tint.sc { background: rgba(232, 184, 74, 0.10); }
+.mel-note { position: absolute; z-index: 2; border-radius: 7px; display: flex; align-items: center; justify-content: center;
+  font: 700 10px/1 'Outfit', sans-serif; cursor: grab; box-shadow: 0 1px 2px rgba(80,65,30,0.18); border: 1px solid rgba(0,0,0,0.06); }
+.mel-note .mel-lbl { pointer-events: none; }
+.mel-note .mel-rz { position: absolute; right: 0; top: 0; bottom: 0; width: 7px; cursor: ew-resize; border-radius: 0 7px 7px 0; }
+.mel-note.tier-chord { background: #6fcf86; color: #14361f; }
+.mel-note.tier-scale { background: #e8b84a; color: #3a2c08; }
+.mel-note.tier-outside { background: #df7d6f; color: #3a120c; }
+.mel-note.tier-passing { background: #b79ad8; color: #2a1740; }
+.mel-note.sel { outline: 2px solid var(--ann); outline-offset: 1px; }
+.mel-note.ghost { background: transparent; border: 1.5px dashed #b3a98a; color: #9a907a; box-shadow: none; cursor: pointer; }
+.ghost-actions { display: flex; gap: 6px; align-items: center; margin: 8px 0 0 58px; }
+.melnote-edit .fretval, .tabedit .fretval { font: 700 13px/1 ui-monospace, Menlo, monospace; min-width: 16px; text-align: center; color: var(--ink); }
+.dark-mode .melnote-edit .fretval { color: #e6e2d8; }
+
+/* ---- tab stave (tier-graded) ---- */
+.tab-grid { position: relative; flex: 1; min-width: 0; cursor: crosshair; background-repeat: repeat-x; }
+.dark-mode .tab-grid { background-image: repeating-linear-gradient(180deg, #3c4150 0 1px, transparent 1px 18px) !important; }
+.tab-rlabel { position: absolute; left: 0; right: 6px; text-align: right; font: 600 10px/1 ui-monospace, Menlo, monospace; color: #a39a85; display: flex; align-items: center; justify-content: flex-end; }
+.tab-mark { position: absolute; transform: translate(-50%, -50%); z-index: 2; font: 700 12px/1 ui-monospace, Menlo, monospace;
+  color: #5a5240; background: #fffdf8; padding: 1px 3px; border-radius: 4px; cursor: pointer; }
+.dark-mode .tab-mark { color: #cfc6ae; background: #1f222b; }
+.tab-mark:hover { box-shadow: 0 0 0 1.5px var(--gold); }
+.tab-mark.ghost { color: #b3a98a; font-style: italic; }
+.tab-mark.sel { outline: 2px solid var(--gold); outline-offset: 1px; }
+.tab-mark.tier-chord { color: #2f8a4c; } .tab-mark.tier-scale { color: #b3892a; }
+.tab-mark.tier-outside { color: #c0392b; } .tab-mark.tier-passing { color: #7d57b0; }
+.tab-mark .artic { font-size: 8px; font-weight: 700; color: var(--gold-deep); }
+/* tab hover-to-enter cell */
+.tab-hover { position: absolute; transform: translateX(-50%); top: 0; bottom: 0; z-index: 1; pointer-events: none;
+  background: rgba(200,160,74,0.16); border-left: 1px solid rgba(200,160,74,0.5); border-right: 1px solid rgba(200,160,74,0.5); }
+
+/* ---- functional palette + mode tabs ---- */
+.palette-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.palette-head .uzlabel { flex: 1; }
+.pal-group { margin: 0 0 10px; }
+.pal-grouplbl { font-size: 9.5px; font-weight: 700; letter-spacing: 0.08em; color: #9a8f72; text-transform: uppercase; margin: 0 0 6px; }
+.pal-hint { font-weight: 600; letter-spacing: 0; text-transform: none; color: #b8ad92; font-style: italic; }
+.pal-row { display: flex; gap: 7px; flex-wrap: wrap; }
+.pal-btn { border: 1px solid #e6dec9; background: #fff; border-radius: 10px; padding: 7px 12px; font-weight: 700; font-size: 13px; color: var(--gold-deep); cursor: pointer; box-shadow: 0 1px 2px rgba(80,65,30,0.06); white-space: nowrap; }
+.pal-btn:hover { border-color: var(--gold); }
+.pal-btn .deg { font-size: 9.5px; color: var(--muted); font-weight: 600; margin-left: 5px; }
+.dark-mode .pal-btn { background: #232732; border-color: #3c4150; color: #e0c878; }
+.modeswitch.tiny span { font-size: 9.5px; padding: 4px 9px; }
+.modeswitch.keymode span { font-size: 11px; padding: 6px 11px; }
+.modeswitch.keymode { flex: none; }
+
+/* category tints reuse uz.css; ensure palette buttons echo them */
+.pal-btn.cat-secdom { border-style: dashed; }
+.pal-btn.cat-lydian { border-color: #b8a0d4; } .pal-btn.cat-mixo { border-color: #a0c4d4; }
+.pal-btn.cat-phryg { border-color: #d4a0a0; } .pal-btn.cat-borrowed { border-color: #ccc; }
+.pal-btn.cat-dom { border-color: #d4c090; }
+
+/* responsive 390 */
+@media (max-width: 560px) {
+  .appwrap { padding: 16px 12px 50px; }
+  .lineheader { gap: 6px; }
+  .lh-seg span, .modeswitch span { padding: 5px 8px; font-size: 10px; }
+  .bargrid { grid-template-columns: repeat(2, 1fr) !important; }
+  .transport { gap: 8px; }
+  .bpm-range { width: 80px; }
+  .t-keysel { font-size: 11px; }
+}
+
+
+/* === v2 feedback fixes (13 Jun) === */
+/* clearer separation between Chords / Tab / Melody lanes */
+.tab-lane { margin-top: 12px; padding-top: 10px; border-top: 1px dashed #ddd3bb; }
+.mel-lane { margin-top: 12px; padding-top: 10px; border-top: 1px dashed #ddd3bb; }
+.dark-mode .tab-lane, .dark-mode .mel-lane { border-top-color: #3a3f4d; }
+/* tab fret marks read as small chips and never clip at the gutter */
+.tab-mark { min-width: 16px; height: 15px; padding: 0 3px; display: flex; align-items: center; justify-content: center; background: #fffdf8; border-radius: 4px; box-shadow: 0 0 0 1px rgba(120,100,50,0.08); }
+.dark-mode .tab-mark { background: #262a34; }
+.tab-fret-input { width: 22px; border: none; background: transparent; text-align: center; font: 700 12px/1 ui-monospace, Menlo, monospace; color: inherit; padding: 0; outline: none; -moz-appearance: textfield; }
+.tab-fret-input::-webkit-outer-spin-button, .tab-fret-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+/* tone pills: more breathing room, clip cleanly inside the bar */
+.mtone-bar { gap: 4px 6px; padding: 4px 8px 4px 6px; }
+.mtone-bar .tp { padding: 2px 5px; }
+
+/* === v2 optimisation pass (13 Jun) — structural fixes (override earlier rules) === */
+:root { --gut: 58px; --red: #c0392b; --line-soft: #ece3cf; }
+
+/* ONE shared ruler: chord lane must sit flush on the shared grid like tab/melody —
+   kill its padding / border / own gridlines so chords line up with bar lines + notes */
+.tl-inner .tl-strip { padding: 0; border: none; background: transparent; background-image: none; }
+.tl-inner .tl-strip .chipslot { padding: 0; }
+.lane-ico { width: var(--gut); }
+
+/* timeline playhead — was invisible (no CSS); span all open lanes */
+.tl-inner { position: relative; }
+.ph.tl-ph { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--red); z-index: 6; pointer-events: none; box-shadow: 0 0 6px rgba(192,57,43,0.45); }
+
+/* lane separators: solid hairline (not dashed — dashed is reserved for "add") */
+.tab-lane, .mel-lane { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line-soft); }
+.dark-mode .tab-lane, .dark-mode .mel-lane { border-top-color: #343845; }
+
+/* chip: fingering diagram is now a plain visual; edit moves to a small corner pip */
+.chip { position: relative; }
+.chip.anatomy3 { min-height: 66px; }
+.shape-grid-wrap { flex: none; display: flex; align-items: center; }
+.shape-grid-wrap.muted { opacity: 0.4; }
+.chip.anatomy3 .chord-shape-btn { position: absolute; top: 3px; right: 4px; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; padding: 0; font-size: 11px; line-height: 1; color: #c9b170; background: rgba(255,253,248,0.9); border: 1px solid #ece3cf; border-radius: 6px; opacity: 0.55; cursor: pointer; z-index: 3; }
+.chip.anatomy3 .chord-shape-btn:hover { opacity: 1; color: var(--gold-deep); }
+
+/* bigger touch targets (≈44px effective via padding box) */
+.chip .durbadge { min-width: 22px; min-height: 22px; display: inline-flex; align-items: center; justify-content: center; }
+.chip .acc { min-width: 20px; min-height: 20px; display: inline-flex; align-items: center; justify-content: center; }
+.chip .handle { width: 16px; }
+.mel-note .mel-rz { width: 12px; }
+.mel-tb-btn, .st-btn, .lh-btn { min-height: 30px; }
+
+/* fret marks already chip-styled in 1b; ensure they sit above the playhead grid lines */
+.tab-mark { z-index: 3; }
+
+/* === v2 feedback round 2 (13 Jun) — overrides win (appended last) === */
+/* #1 #7 undo the min-height that double-stacked toolbar buttons; hug the text */
+.mel-tb-btn, .st-btn, .lh-btn { min-height: 0; line-height: 1.1; }
+
+/* #10 melody grid: remove the background-tiled vertical lines (they accumulate drift);
+   keep only horizontal row lines. Vertical slot lines now come from .mel-slots spans. */
+.mel-grid { background-image: linear-gradient(180deg, #f1ebdb 1px, transparent 1px); }
+.dark-mode .mel-grid { background-image: linear-gradient(180deg, #21242d 1px, transparent 1px); }
+.mel-slots { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.mel-slots span { position: absolute; top: 0; bottom: 0; width: 1px; background: #efe8d7; }
+.mel-slots span.bar { background: #cdc2a6; }
+.dark-mode .mel-slots span { background: #23262f; }
+.dark-mode .mel-slots span.bar { background: #3a3f4d; }
+.mel-grid .mel-tints, .mel-grid .mel-note { position: absolute; }
+.mel-note { z-index: 2; }
+
+/* #5 pan arrows sit in the zoom bar like the zoom buttons */
+.tl-zoombar .zoomgap { width: 12px; display: inline-block; }
+
+/* #11 share = a normal button */
+.share-btn { cursor: pointer; }
+
+/* #9 inline note editor row (under the header, fixed width — not in the scroll) */
+.noteed-inline { margin: 6px 0 0; background: #fffdf6; border: 1px solid var(--line); border-radius: 12px; padding: 7px 12px; overflow-x: auto; }
+.noteed-inline .seltools { flex-wrap: nowrap; }
+.dark-mode .noteed-inline { background: #20232c; border-color: #343845; }
+
+/* #9 compact dropdown for grouped options (articulation) */
+.uz-select { border: 1px solid #e6dec9; background: #fdfaf2; border-radius: 8px; padding: 5px 8px; font: 600 12px 'Outfit', sans-serif; color: var(--ink); cursor: pointer; }
+.dark-mode .uz-select { background: #262a34; border-color: #3a3f4d; color: #e7e1d2; }
+
+/* #3 unified empty/add bar cell */
+.chip.addbarbtn { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+/* === builder-intrinsic gaps (13 Jun) === */
+.lh-rename { cursor: pointer; opacity: 0.45; font-size: 12px; margin-left: 2px; padding: 2px 4px; border-radius: 6px; }
+.lh-rename:hover { opacity: 1; background: rgba(200,160,74,0.12); }
+.lh-name-input { font: 700 16px 'Outfit', sans-serif; color: var(--ink); border: 1px solid var(--gold); border-radius: 8px; padding: 3px 8px; background: #fffdf6; max-width: 180px; }
+.dark-mode .lh-name-input { background: #20232c; color: #ece5d6; }
+
+/* #3 more space around the timeline edges */
+.tl-zoombar { padding: 2px 10px; }
+.linecard .linebody { padding: 2px 10px 10px; }
+.tl-scroll { padding-bottom: 4px; }
+
+/* === free-floating chord model (13 Jun) === */
+.chords-abs { position: relative; height: 84px; }
+.chip-pos { position: absolute; top: 0; bottom: 0; padding: 0 2px; box-sizing: border-box; }
+.chip-pos > .chip { width: 100%; height: 100%; box-sizing: border-box; }
+.chip .handle { position: absolute; right: 0; top: 0; bottom: 0; width: 9px; cursor: ew-resize; border-radius: 0 9px 9px 0; background: linear-gradient(90deg, transparent, rgba(200,160,74,0.25)); }
+.chip-pos > .chip { cursor: grab; }
+.chip-pos > .chip:active { cursor: grabbing; }
+
+/* stacked = positioned chips over a bar grid */
+.stacked-wrap { position: relative; }
+.bargrid-bg { display: grid; gap: 0; height: 92px; }
+.stacked-wrap .barcell { border: 1px solid var(--line); border-left: none; background: #fffdf8; position: relative; }
+.stacked-wrap .barcell:first-child { border-left: 1px solid var(--line); border-radius: 9px 0 0 9px; }
+.stacked-wrap .barcell:last-child { border-radius: 0 9px 9px 0; }
+.stacked-wrap .barnum { position: absolute; top: 5px; left: 7px; font: 700 9px 'Outfit', sans-serif; letter-spacing: .08em; color: #b3a98a; }
+.chips-abs { position: absolute; left: 0; right: 0; top: 0; height: 92px; }
+.chips-abs .chip-pos { top: 18px; bottom: 6px; }
+.dark-mode .stacked-wrap .barcell { background: #20232c; border-color: #343845; }
+.stacked-addrow { margin-top: 8px; }
+
+.meter-select { margin-left: 4px; padding: 4px 6px; font-size: 11px; }
+
+/* === feedback round 4 (13 Jun) === */
+/* lane toolbars become solid boxes above their lane (were faded floaters) */
+.lane-toolbar { opacity: 1 !important; background: #faf6ec; border: 1px solid var(--line); border-radius: 10px; padding: 5px 8px; margin: 10px 0 6px; gap: 5px; }
+.dark-mode .lane-toolbar { background: #23262f; border-color: #343845; }
+.mel-tones { margin-top: 4px; }
+
+/* === unified per-modality toolbars (13 Jun) === */
+.lane-toolbar { flex-wrap: wrap; }
+.lane-tag { font: 700 11px 'Outfit', sans-serif; letter-spacing: .06em; color: var(--gold-deep); text-transform: uppercase; padding-right: 6px; display: inline-flex; align-items: center; white-space: nowrap; }
+.tb-div { flex-basis: 100%; height: 0; margin: 5px 0 1px; border-top: 1px dashed var(--line); }
+.lane-toolbar .seltools { width: 100%; padding-top: 3px; flex-wrap: wrap; }
+.seltools > .lane-tag { margin-right: 4px; }
